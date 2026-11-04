@@ -292,7 +292,13 @@ void drawGarage() {
     render::drawPanel(8, 40, 256, 226, owned ? d.c1 : C_GREY);
     gfx::fillRect(10, 66, 252, 82, gfx::mix(MAPS[P().map].skyTop, MAPS[P().map].skyBot, 140));
     gfx::fillRect(10, 140, 252, 8, MAPS[P().map].surface);
-    render::drawVehiclePreview(v, 136, 141 - (3 * (VEHS[v].wheelY0 + VEHS[v].r0)) / 2, 384);
+    {
+        // as big as fits between the name (y 70) and the ground line (y 141)
+        const int below = VEHS[v].wheelY0 + VEHS[v].r0, tall = below - VEHS[v].headY + 8;
+        int sc = (71 * 256) / tall;
+        if (sc > 384) sc = 384;
+        render::drawVehiclePreview(v, 136, 141 - (below * sc) / 256, sc);
+    }
     gfx::textShadow(18, 47, d.name, 2, C_WHITE, C_BLACK);
     if (P().veh == v) gfx::text(204, 51, "IN USE", 1, C_GOLD);
     wrapText(18, 153, 240, d.blurb, C_DIM);
