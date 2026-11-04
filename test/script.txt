@@ -1,0 +1,44 @@
+# Scripted run of the real app (main.cpp) against a fake LCD. Screenshots go to out/*.png.
+frames 2
+shot 01_title
+key 1
+shot 02_garage
+key DOWN
+shot 03_garage_locked
+key UP
+key CLEAR
+key 2
+shot 04_maps
+key DOWN
+shot 05_maps_locked
+key UP
+key CLEAR
+key EQUALS
+shot 06_settings
+key CLEAR
+key DOT
+shot 07_help
+key CLEAR
+key EXE
+frames 2
+shot 08_run_start
+holdkey DOWN 60
+shot 09_run_gas
+holdkey DOWN 200
+shot 10_run_later
+time run_frame
+holdkey DOWN 300
+shot 11_run_further
+key CLEAR
+frames 2
+shot 12_pause
+key EXE
+holdkey DOWN 400
+shot 13_run_more
+key CLEAR
+key CLEAR
+frames 2
+shot 14_result
+key CLEAR
+frames 2
+shot 15_title_after
