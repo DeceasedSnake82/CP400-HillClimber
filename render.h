@@ -17,7 +17,7 @@ uint32_t mapSeed(int map);    // the fixed terrain seed of every map
 void setMap(int map);
 
 void cameraReset(Camera& c, const hc::Run& r);
-void cameraFollow(Camera& c, const hc::Run& r);          // once per frame
+void cameraFollow(Camera& c, const hc::Run& r, bool autoZoom = true);   // once per frame
 
 // The whole game screen except the HUD: sky, parallax hills, terrain, decor, items, car.
 void drawWorld(hc::Run& r, const Camera& c);

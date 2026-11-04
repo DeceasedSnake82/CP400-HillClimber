@@ -395,8 +395,8 @@ void bodyFrame(const Run& r, fx& cx, fx& cy, int32_t& ux, int32_t& uy) {
 }
 
 int32_t speedKmh(const Run& r) {
-    const fx vx = carX(r) - ((r.p[P_B0].ox + r.p[P_B1].ox) >> 1);
-    const fx vy = carY(r) - ((r.p[P_B0].oy + r.p[P_B1].oy) >> 1);
+    const fx vx = carX(r) - carOldX(r);
+    const fx vy = carY(r) - carOldY(r);
     return (dist(0, 0, vx, vy) * 27) >> FXS;          // px/tick -> km/h at 16 px/m, 120 Hz
 }
 
@@ -746,7 +746,7 @@ void step(Run& r, const Input& in0) {
 
     // out of fuel: wait until the car has (almost) stopped
     if (r.fuel <= 0) {
-        const fx vx = cx - ((r.p[P_B0].ox + r.p[P_B1].ox) >> 1);
+        const fx vx = cx - carOldX(r);
         if (absi(vx) < (ONE >> 4)) ++r.stillT; else r.stillT = 0;
         if (r.stillT > sec(1.5)) { r.over = END_FUEL; r.overT = 0; }
     }

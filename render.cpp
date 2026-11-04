@@ -142,13 +142,13 @@ void cameraReset(Camera& c, const Run& r) {
     c.y = carY(r) - (fx)((H * 58 / 100) << FXS);
 }
 
-void cameraFollow(Camera& c, const Run& r) {
+void cameraFollow(Camera& c, const Run& r, bool autoZoom) {
     const int32_t kmh = speedKmh(r);
     int32_t tz = 256 + (kmh > 90 ? 90 : kmh) * 9 / 10;           // zoom out with speed (to 1.3)
     if (r.airT > sec(0.5)) tz += 24;
-    c.zoom += (tz - c.zoom) / 12;
+    if (autoZoom) c.zoom += (tz - c.zoom) / 12;
     // look ahead in the direction of travel
-    const fx vx = carX(r) - ((r.p[P_B0].ox + r.p[P_B1].ox) >> 1);
+    const fx vx = carX(r) - carOldX(r);
     int32_t lead = (int32_t)((W * 33 / 100) - ((vx * 8) >> FXS));
     if (lead < W * 27 / 100) lead = W * 27 / 100;
     if (lead > W * 45 / 100) lead = W * 45 / 100;

@@ -182,6 +182,19 @@ void endRun(uint8_t reason) {
     screen = SC_RESULT;
 }
 
+void resume() {
+    paused = false;
+    if (data.set.timer) rtcLast = rtcRead();         // do not count the paused time
+}
+
+// RESTART from the pause menu banks the coins of the abandoned run first (like END RUN).
+void restartRun() {
+    if (!run.over) run.over = END_QUIT;
+    finishRun(run, P());
+    persist();
+    startRun();
+}
+
 int ticksThisFrame() {
     if (!data.set.timer) return data.set.pace;
     const uint8_t now = rtcRead();
@@ -225,8 +238,7 @@ void runFrame() {
         step(run, in);
         if (run.over && run.overT >= sec(1.3)) { endRun(run.over); return; }
     }
-    if (data.set.autoZoom) render::cameraFollow(cam, run);
-    else { const int32_t z = cam.zoom; render::cameraFollow(cam, run); cam.zoom = z; }
+    render::cameraFollow(cam, run, data.set.autoZoom != 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -321,7 +333,7 @@ void drawGarage() {
             if (c == 0) render::drawButton(G_BUY_X, y + 4, G_BUY_W, 34, "MAX", 2, C_GREY);
             else {
                 putCoins(b, c);
-                render::drawButton(G_BUY_X, y + 4, G_BUY_W, 34, b, b[5] ? 1 : 2, P().coins >= c ? C_GREEN : C_GREY);
+                render::drawButton(G_BUY_X, y + 4, G_BUY_W, 34, b, gfx::textWidth(b, 2) > G_BUY_W - 8 ? 1 : 2, P().coins >= c ? C_GREEN : C_GREY);
             }
         }
     } else {
@@ -406,7 +418,7 @@ void drawRun() {
         render::drawButton(PZ_X0, PZ_Y, PZ_W, PZ_H, "RESUME", 2, C_GREEN);
         render::drawButton(PZ_X1, PZ_Y, PZ_W, PZ_H, "RESTART", 2, C_BLUE);
         render::drawButton(PZ_X2, PZ_Y, PZ_W, PZ_H, "END RUN", 2, C_DARKRED);
-        gfx::textCentered(gfx::W / 2, 220, "EXE RESUME   1 RESTART   CLEAR END RUN (COINS ARE KEPT)", 1, C_DIM);
+        gfx::textCentered(gfx::W / 2, 220, "EXE RESUME   1 RESTART   CLEAR END RUN   (COINS ARE KEPT)", 1, C_DIM);
     }
 }
 
@@ -609,8 +621,8 @@ bool isBrakeKey(int c) { return c == KEYCODE_UP || c == KEYCODE_7 || c == KEYCOD
 
 void runKey(int code) {
     if (paused) {
-        if (code == KEYCODE_EXE) paused = false;
-        else if (code == KEYCODE_1) startRun();
+        if (code == KEYCODE_EXE) resume();
+        else if (code == KEYCODE_1) restartRun();
         else if (code == KEYCODE_POWER_CLEAR) endRun(END_QUIT);
         return;
     }
@@ -673,8 +685,8 @@ void runTouch(int dir, int x, int y) {
     if (dir == TOUCH_HOLD_DRAG) { if (touchDown) { touchX = x; touchY = y; } return; }
     if (dir != TOUCH_DOWN) return;
     if (paused) {
-        if (inRect(x, y, PZ_X0, PZ_Y, PZ_W, PZ_H)) paused = false;
-        else if (inRect(x, y, PZ_X1, PZ_Y, PZ_W, PZ_H)) startRun();
+        if (inRect(x, y, PZ_X0, PZ_Y, PZ_W, PZ_H)) resume();
+        else if (inRect(x, y, PZ_X1, PZ_Y, PZ_W, PZ_H)) restartRun();
         else if (inRect(x, y, PZ_X2, PZ_Y, PZ_W, PZ_H)) endRun(END_QUIT);
         return;
     }

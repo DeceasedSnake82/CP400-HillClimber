@@ -212,6 +212,37 @@ static void testFlip() {
     CHECKM(run.flips == 1 && run.coinsStunt > 0 && run.popup == PU_FLIP, "flips %d over %d", run.flips, run.over);
 }
 
+// Move the whole vehicle so its centre is `above` px over the ground at world x (keeps velocity).
+static void teleport(Run& r, fx x, int above) {
+    static Terrain t;
+    terrainInit(t, r.map, r.terr.seed);
+    const fx dx = x - carX(r), dy = groundAt(t, x) - (above << FXS) - carY(r);
+    for (int i = 0; i < NP; ++i) { r.p[i].x += dx; r.p[i].ox += dx; r.p[i].y += dy; r.p[i].oy += dy; }
+}
+
+static void testFarEnd() {
+    // positions past 16 km must not overflow (two Q12 x values added used to wrap int32)
+    freshProfile();
+    for (int u = 0; u < U_COUNT; ++u) prof.level[5][u] = MAX_LEVEL;
+    runStart(run, prof, 5, 0, seedOf(0));
+    int can = 0;
+    while (can < run.nFuel && run.fuelAt[can] < 17000) ++can;
+    CHECK(can < run.nFuel);
+    teleport(run, ((fx)run.fuelAt[can] << (FXS + SEG_SHIFT)) - (3 << FXS), 30);
+    run.fuel = run.c.fuelMax / 3;
+    Input none = { false, false }, gas = { true, false };
+    for (int t = 0; t < sec(1); ++t) step(run, none);
+    CHECKM(fuelTaken(run, can), "fuel can at %d m not taken", run.fuelAt[can]);
+    CHECK(metres(run) >= run.fuelAt[can] - 4 && metres(run) < MAX_M);
+    CHECK(carX(run) > 0 && speedKmh(run) < 200);
+    // the end of the road
+    teleport(run, (fx)(MAX_M - 60) << (FXS + SEG_SHIFT), 30);
+    run.fuel = run.c.fuelMax;
+    for (int t = 0; t < sec(30) && !run.over; ++t) step(run, gas);
+    CHECKM(run.over == END_FINISH, "over %d at %d m", run.over, metres(run));
+    CHECK(metres(run) >= MAX_M - 30);
+}
+
 static void testProfile() {
     Profile p;
     profileNew(p);
@@ -322,6 +353,7 @@ int main() {
     testCrash();
     testCoins();
     testFlip();
+    testFarEnd();
     testProfile();
     testUpgradesHelp();
     testSave();

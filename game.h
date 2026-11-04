@@ -194,8 +194,12 @@ void finishRun(Run& r, Profile& p);              // bank coins, update records
 // --- queries used by the renderer and tests ----------------------------------------------------
 int bodyAngle(const Run& r);                     // 0..1023, 0 = level, increasing = nose down
 void bodyFrame(const Run& r, fx& cx, fx& cy, int32_t& ux, int32_t& uy);   // centre + unit x axis (Q12)
-inline fx carX(const Run& r) { return (r.p[P_B0].x + r.p[P_B1].x) >> 1; }
-inline fx carY(const Run& r) { return (r.p[P_B0].y + r.p[P_B1].y) >> 1; }
+// Midpoints as a + (b - a) / 2: two Q12 x positions past 16 km would overflow int32 if added.
+inline fx mid(fx a, fx b) { return a + ((b - a) >> 1); }
+inline fx carX(const Run& r) { return mid(r.p[P_B0].x, r.p[P_B1].x); }
+inline fx carY(const Run& r) { return mid(r.p[P_B0].y, r.p[P_B1].y); }
+inline fx carOldX(const Run& r) { return mid(r.p[P_B0].ox, r.p[P_B1].ox); }
+inline fx carOldY(const Run& r) { return mid(r.p[P_B0].oy, r.p[P_B1].oy); }
 int32_t speedKmh(const Run& r);
 
 // Coins: slot s (every COIN_SLOT_M metres), k = 0..4. Returns false if the slot has no coins.
