@@ -679,10 +679,14 @@ void step(Run& r, const Input& in0) {
                 const int32_t v = 50 * flips * flips;
                 r.coinsStunt += v;
                 award(r, flips > 1 ? PU_DFLIP : PU_FLIP, v);
-            } else if (r.airT >= sec(1.2)) {
-                const int32_t v = (r.airT * 10) / TICK_HZ * 5;     // 50 coins per second of air
-                r.coinsStunt += v;
-                award(r, PU_AIR, v);
+            } else {
+                // air time in "standard gravity" seconds, so low-gravity jumps are not free coins
+                const int32_t eff = (r.airT * c.gravity) / G_STD;
+                if (eff >= sec(1.2)) {
+                    const int32_t v = (eff * 10) / TICK_HZ * 5;    // 50 coins per second of air
+                    r.coinsStunt += v;
+                    award(r, PU_AIR, v);
+                }
             }
             if (r.airT > r.airBest) r.airBest = r.airT;
         }
